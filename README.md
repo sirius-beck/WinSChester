@@ -5,5 +5,5 @@ Comprehensive and customizable PowerShell script designed to automate a series o
 Run powershell as admin
 
 ```powershell
-git clone https://github.com/sirius-beck/WinSCheste.git && cd WinSCheste && .\run.ps1 help
+git clone https://github.com/sirius-beck/WinSChester.git && cd WinSChester && .\run.ps1 help
 ```
