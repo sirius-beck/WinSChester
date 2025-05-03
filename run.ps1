@@ -95,7 +95,7 @@ function Remove-PreInstalledApps {
 
     foreach ($app in $app_list) {
         $result = winget uninstall --purge --id $app 2>&1
-        if ($LASTEXITCODE -eq 0) {
+        if ($?) {
             Show-Message -Message "App '$app' removed successfully." -Color 'Success'
         } else {
             Show-Message -Message "Failed to remove app '$app'`n$result`n" -Color 'Error'
@@ -135,14 +135,14 @@ function Disable-Telemetry {
 
     foreach ($task in $tasks) {
         $result = schtasks /end /tn $task 2>&1
-        if ($LASTEXITCODE -eq 0) {
+        if ($?) {
             Show-Message -Message "Task '$task' ended successfully." -Color 'Success'
         } else {
             Show-Message -Message "Failed to end task '$task': $result" -Color 'Error'
         }
 
         $result = schtasks /change /tn $task /disable 2>&1
-        if ($LASTEXITCODE -eq 0) {
+        if ($?) {
             Show-Message -Message "Task '$task' disabled successfully." -Color 'Success'
         } else {
             Show-Message -Message "Failed to disable task '$task': $result" -Color 'Error'
@@ -159,18 +159,18 @@ function Disable-Services {
     )
 
     foreach ($service in $servicesList) {
-        $result = Set-Service -Name $service -StartupType Manual -Force 2>&1
-        if ($LASTEXITCODE -eq 0) {
-            Show-Message -Message "Service '$service' set to manual startup successfully." -Color 'Success'
-        } else {
-            Show-Message -Message "Failed to set service '$service' to manual startup: $result" -Color 'Error'
-        }
-
         $result = Stop-Service -Name $service -Force 2>&1
-        if ($LASTEXITCODE -eq 0) {
+        if ($?) {
             Show-Message -Message "Service '$service' stopped successfully." -Color 'Success'
         } else {
             Show-Message -Message "Failed to stop service '$service': $result" -Color 'Error'
+        }
+
+        $result = Set-Service -Name $service -StartupType Disabled -Force 2>&1
+        if ($?) {
+            Show-Message -Message "Service '$service' set to manual startup successfully." -Color 'Success'
+        } else {
+            Show-Message -Message "Failed to set service '$service' to manual startup: $result" -Color 'Error'
         }
     }
 }
@@ -185,16 +185,24 @@ function Update-RegistryProperties {
         foreach ($item in $property.Items) {
             if ($item.Action -eq 'Remove') {
                 $result = Remove-ItemProperty -Path $property.Path -Name $item.Name -ErrorAction SilentlyContinue -Force 2>&1
-                if ($LASTEXITCODE -eq 0) {
+
+                if ($?)
+                {
                     Show-Message -Message "Registry property '$($property.Path)\$($item.Name)' removed successfully." -Color 'Success'
-                } else {
+                }
+                else
+                {
                     Show-Message -Message "Failed to remove registry property '$($property.Path)\$($item.Name)': $result" -Color 'Error'
                 }
             } elseif ($item.Action -eq 'Set') {
                 $result = Set-ItemProperty -Path $property.Path -Name $item.Name -Value $item.Value -Type $item.Type -Force 2>&1
-                if ($LASTEXITCODE -eq 0) {
+
+                if ($?)
+                {
                     Show-Message -Message "Registry property '$($property.Path)\$($item.Name)' set successfully." -Color 'Success'
-                } else {
+                }
+                else
+                {
                     Show-Message -Message "Failed to set registry property '$($property.Path)\$($item.Name)': $result" -Color 'Error'
                 }
             }
@@ -446,14 +454,14 @@ function Set-HardwareDataQueueSize {
 
 function Enable-UltimatePerformance {
     $hibernateResult = POWERCFG /HIBERNATE OFF 2>&1
-    if ($LASTEXITCODE -eq 0) {
+    if ($?) {
         Show-Message -Message "Hibernate mode disabled successfully." -Color 'Success'
     } else {
         Show-Message -Message "Failed to disable hibernate mode: $hibernateResult" -Color 'Error'
     }
 
     $output = Invoke-Expression 'POWERCFG /DUPLICATESCHEME e9a42b02-d5df-448d-aa00-03f14749eb61' 2>&1
-    if ($LASTEXITCODE -eq 0) {
+    if ($?) {
         $guid = ($output -split ': ')[1].Trim()
         $guid = ($guid -split ' ')[0].Trim()
         Show-Message -Message "Power scheme duplicated successfully. GUID: $guid" -Color 'Success'
@@ -463,7 +471,7 @@ function Enable-UltimatePerformance {
     }
 
     $setActiveResult = POWERCFG /SETACTIVE $guid 2>&1
-    if ($LASTEXITCODE -eq 0) {
+    if ($?) {
         Show-Message -Message "Power scheme set as active successfully." -Color 'Success'
     } else {
         Show-Message -Message "Failed to set power scheme as active: $setActiveResult" -Color 'Error'
